@@ -83,6 +83,10 @@ const main = async () => {
       update();
     },
     (error) => {
+      const h1 = document.createElement('h1');
+      h1.style = 'position: absolute; top: 20px; left: 20px';
+      h1.innerText = 'Cannot get cammera: ' + error;
+      document.body.appendChild(h1);
       console.log(error);
     });
 };

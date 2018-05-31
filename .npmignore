@@ -1,9 +1,0 @@
-*.tar.gz
-.*
-.travis/
-data/.gitignore
-src/
-test/
-zbar-*/
-Makefile
-webpack.config.js

@@ -1,3 +1,4 @@
+const CopyWebpackPlugin = require('copy-webpack-plugin')
 const path = require('path');
 const webpack = require('webpack');
 
@@ -11,14 +12,13 @@ const generateConfig = (
   node: {
     __dirname: true
   },
-  target: 'node',
   watchOptions: {
     ignored: '/node_modules/',
     poll: true
   },
   entry: [entry],
   output: {
-    path: path.resolve(__dirname, 'test/build'),
+    path: path.resolve(__dirname, './'),
     filename: outputName,
   },
   resolve: {
@@ -30,12 +30,18 @@ const generateConfig = (
     }, {})
   },
   devtool: 'source-map',
-  plugins: [new webpack.EnvironmentPlugin(envNames)],
+  plugins: [
+    new webpack.EnvironmentPlugin(envNames),
+    new CopyWebpackPlugin([
+      { from: 'node_modules/zbar.wasm/data/zbar.wasm', to: 'data/' }
+    ], {}),
+  ],
   module: {
     rules: [
       {
         test: /\.jsx?$/,
         include: path.resolve(__dirname, includeFrom),
+        exclude: /node_modules/,
         use: {
           loader: 'babel-loader',
           options: {
@@ -45,24 +51,21 @@ const generateConfig = (
             ]
           }
         }
-      },
-      {
-        test: /\.node$/,
-        use: 'node-loader'
       }
     ]
+  },
+  externals: {
+    'fs': true,
+    'path': true,
   }
 });
 
 module.exports = [
   generateConfig(
-    './test/test.js',
+    './index.js',
     'build.js',
-    'test',
-    {
-      data: './data',
-      index: './',
-    },
+    './',
+    {},
     []
   )
 ];

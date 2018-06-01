@@ -20,7 +20,15 @@ const handleCanvasResize = () => {
   }
 };
 
-window.onresize = handleCanvasResize;
+const initCanvas = () => {
+  window.onresize = handleCanvasResize;
+  const canvas = document.getElementsByTagName('canvas')[0];
+  canvas.width = 600;
+  canvas.height = 400;
+  const ctx = canvas.getContext('2d');
+  ctx.font = '48px serif';
+  ctx.fillText('Loading...', 30, 300);
+}
 
 const main = async () => {
   navigator.getMedia = (
@@ -91,4 +99,5 @@ const main = async () => {
     });
 };
 
+initCanvas();
 main();

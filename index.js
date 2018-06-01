@@ -1,7 +1,16 @@
 import Scanner from 'zbar.wasm';
 
-const QRSCAN_WIDTH = 300;
-const SCAN_PROID = 600;
+const QRSCAN_WIDTH = 500;
+const SCAN_PROID = 1200;
+
+const redrawCanvas = canvas => {
+  const ctx = canvas.getContext('2d');
+  const offsetX = (canvas.width - QRSCAN_WIDTH) / 2;
+  const offsetY = (canvas.height - QRSCAN_WIDTH) / 2;
+  ctx.strokeStyle = '#00FF00';
+  ctx.lineWidth = 6;
+  ctx.strokeRect(offsetX, offsetY, QRSCAN_WIDTH, QRSCAN_WIDTH);
+}
 
 const handleCanvasResize = () => {
   const canvas = document.getElementsByTagName('canvas')[0];
@@ -9,8 +18,7 @@ const handleCanvasResize = () => {
   const newHeight = window.innerHeight;
   const origWidth = canvas.width;
   const origHeight = canvas.height;
-  if (!origHeight || !origWidth || !newHeight || !newWidth)
-    return;
+  if (!origHeight || !origWidth || !newHeight || !newWidth) return;
   if (origWidth * (newHeight / origHeight) <= newWidth) {
     canvas.height = newHeight;
     canvas.width = origWidth * (newHeight / origHeight);
@@ -18,6 +26,12 @@ const handleCanvasResize = () => {
     canvas.height = origHeight * (newWidth / origWidth);
     canvas.width = newWidth;
   }
+
+  redrawCanvas(canvas);
+  
+  const video = document.getElementsByTagName('video')[0];
+  video.height = canvas.height;
+  video.width = canvas.width;
 };
 
 const initCanvas = () => {
@@ -28,76 +42,61 @@ const initCanvas = () => {
   const ctx = canvas.getContext('2d');
   ctx.font = '48px serif';
   ctx.fillText('Loading...', 30, 300);
-}
-
-const main = async () => {
-  navigator.getMedia = (
-    navigator.getUserMedia || navigator.webkitGetUserMedia ||
-    navigator.mozGetUserMedia);
-
-  const scanner = await Scanner({locateFile: file => ('data/' + file)});
-
-  navigator.getMedia(
-    {video:true, audio:false},
-    (mediaStream) => {
-      const video = document.createElement('video');
-      video.srcObject = mediaStream;
-      const canvas = document.getElementsByTagName('canvas')[0];
-      video.onloadedmetadata = () => {
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        console.log('video init');
-        handleCanvasResize();
-      };
-      video.play();
-      const ctx = canvas.getContext('2d');
-      let fps = 0;
-      let frameCount = 0;
-      let lastTimeStamp = Date.now();
-      let lastScanTimeStamp = Date.now();
-      const update = () => {
-        const now = Date.now();
-        if (now - lastTimeStamp > 1000) {
-          lastTimeStamp = now;
-          fps = frameCount;
-          frameCount = 0;
-        }
-        ++ frameCount;
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const offsetX = (canvas.width - QRSCAN_WIDTH) / 2;
-        const offsetY = (canvas.height - QRSCAN_WIDTH) / 2;
-        const scanImageData =
-          ctx.getImageData(offsetX, offsetY, QRSCAN_WIDTH, QRSCAN_WIDTH);
-        ctx.strokeStyle = "#00FF00";
-        ctx.lineWidth = 6;
-        ctx.strokeRect(offsetX, offsetY, QRSCAN_WIDTH, QRSCAN_WIDTH);
-        ctx.font = '16px serif';
-        ctx.fillText('FPS: ' + fps, 10, 30);
-
-        if (now - lastScanTimeStamp > SCAN_PROID) {
-          lastScanTimeStamp = now;
-          const scanRes =
-            scanner.scanQrcode(scanImageData.data, QRSCAN_WIDTH, QRSCAN_WIDTH);
-
-          if (scanRes.length) {
-            alert("Get Qrcode: " + scanRes);
-            // console.log(scanRes);
-          };
-        }
-
-        setTimeout(update, 50);
-        // requestAnimationFrame(update);
-      };
-      update();
-    },
-    (error) => {
-      const h1 = document.createElement('h1');
-      h1.style = 'position: absolute; top: 20px; left: 20px';
-      h1.innerText = 'Cannot get cammera: ' + error;
-      document.body.appendChild(h1);
-      console.log(error);
-    });
 };
 
-initCanvas();
+const main = async () => {
+  initCanvas();
+  try {
+    const mediaStream = await navigator.mediaDevices.getUserMedia({
+      audio: false,
+      video: { facingMode: 'environment' }
+    });
+    const scanner = await Scanner({ locateFile: file => 'data/' + file });
+
+    const video = document.getElementsByTagName('video')[0];
+    video.srcObject = mediaStream;
+    const canvas = document.getElementsByTagName('canvas')[0];
+    video.onloadedmetadata = () => {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      console.log('video init');
+      handleCanvasResize();
+    };
+    video.play();
+
+    const scan = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = video.width;
+      canvas.height = video.height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const offsetX = (canvas.width - QRSCAN_WIDTH) / 2;
+      const offsetY = (canvas.height - QRSCAN_WIDTH) / 2;
+      const scanImageData = ctx.getImageData(
+        offsetX,
+        offsetY,
+        QRSCAN_WIDTH,
+        QRSCAN_WIDTH
+      );
+      const scanRes = scanner.scanQrcode(
+        scanImageData.data,
+        QRSCAN_WIDTH,
+        QRSCAN_WIDTH
+      );
+
+      if (scanRes.length) {
+        alert('Get Qrcode: ' + scanRes);
+      }
+      setTimeout(scan, SCAN_PROID);
+    };
+    scan();
+  } catch (err) {
+    const h1 = document.createElement('h1');
+    h1.style = 'position: absolute; top: 20px; left: 20px';
+    h1.innerText = 'Cannot get cammera: ' + err;
+    document.body.appendChild(h1);
+    console.log(err);
+  }
+};
+
 main();

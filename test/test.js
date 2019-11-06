@@ -2,6 +2,12 @@ import Scanner from 'index';
 import fs from 'fs';
 import { createCanvas, loadImage } from 'canvas';
 
+const {
+  performance
+} = require('perf_hooks');
+
+
+console.log('performance', performance.now());
 console.log(Scanner);
 
 const readFile = async path => {
@@ -43,10 +49,24 @@ const scanImage = async (scanner, imagePath) => {
 
 const main = async () => {
   try {
-    const scanner = await Scanner({ locateFile: file => './data/' + file });
-    scanImage(scanner, './test/test.png');
-    scanImage(scanner, './test/test2.png');
-    scanImage(scanner, './test/test3.png');
+      const scanner = await Scanner({ locateFile: file => './data/' + file });
+
+      var start = performance.now();
+      //scanImage(scanner, './test/test.png');
+      //scanImage(scanner, './test/test2.png');
+      //scanImage(scanner, './test/test3.png');
+      const img =await loadImageData('./test/test.png'); 
+      const img2 =await loadImageData('./test/test2.png'); 
+      const img3 =await loadImageData('./test/test3.png'); 
+      for (var i = 0; i< 200; i++)
+      {
+          console.log(scanner.scanQrcode(img.data, img.width, img.height));
+          console.log(scanner.scanQrcode(img2.data, img2.width, img2.height));
+          console.log(scanner.scanQrcode(img3.data, img3.width, img3.height));
+
+      }
+      var realtime = performance.now() - start;
+      console.log(realtime);
   } catch (e) {
     console.log(e);
   } finally {

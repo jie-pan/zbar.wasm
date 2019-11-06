@@ -22,6 +22,10 @@ void deleteBuffer(uint8_t* buf) {
 
 EMSCRIPTEN_KEEPALIVE
 int scanQrcode(uint8_t* imgBuf, int width, int height) {
+    scanner.set_config(zbar::ZBAR_QRCODE, zbar::ZBAR_CFG_ENABLE, 1);
+    //panjie
+    //std::cout << "Init scanner" << std::endl;
+
     uint8_t* grayImgBuf = (uint8_t*)malloc(width * height * sizeof(uint8_t));
     for (int i = 0; i < width; ++i) {
         for (int j = 0; j < height; ++j) {
@@ -49,8 +53,11 @@ const char* getScanResults() {
     }
     if (symb_p == image->symbol_end())
         return NULL;
-    std::cout << "decoded " << symb_p->get_type_name() << " symbol \""
-              << symb_p->get_data() << '"' << std::endl;
+
+    //panjie
+    //std::cout << "decoded " << symb_p->get_type_name() << " symbol \""
+    //          << symb_p->get_data() << '"' << std::endl;
+    
     std::string data = symb_p->get_data();
     char* str = (char*)malloc(data.size() + 1);
     strcpy(str, data.c_str());
@@ -65,7 +72,9 @@ const char* getScanResults() {
 
 }
 
+/*
 int main(int argc, char** argv) {
     scanner.set_config(zbar::ZBAR_QRCODE, zbar::ZBAR_CFG_ENABLE, 1);
     std::cout << "Init scanner" << std::endl;
 }
+*/

@@ -22,10 +22,10 @@ data/zbar.js: .emmake src/api.cpp
 		-s "BINARYEN_METHOD='native-wasm'" \
 		-s ALLOW_MEMORY_GROWTH=1 \
 		-s MODULARIZE=1	\
-		-O3 -g
+		-O3 -g \ -msimd128 -s SIMD=1
 
 .emmake: ${ZBAR_NAME}/Makefile
-	cd ${ZBAR_NAME} && emmake make CFLAGS='-g -O2' CXXFLAGS='-g -O2'
+	cd ${ZBAR_NAME} && emmake make CFLAGS='-g -O2 -msimd128 -s SIMD=1' CXXFLAGS='-g -O2 -msimd128 -s SIMD=1'
 
 
 ${ZBAR_NAME}/Makefile: ${ZBAR_NAME}.tar.gz
@@ -37,8 +37,11 @@ ${ZBAR_NAME}/Makefile: ${ZBAR_NAME}.tar.gz
 
 test: data/zbar.js
 	webpack --config ./webpack.config.js
-	cp data/zbar.* test/build/data/
-	cp data/zbar.*  panjie/
+	mv data/zbar.js    data/zbar-simd.js
+	mv data/zbar.wasm  data/zbar-simd.wasm
+	sed -i 's/zbar.wasm/zbar-simd.wasm/' data/zbar-simd.js
+	cp data/zbar*  test/build/data/
+	cp data/zbar*  panjie/
 
 run: 
 	cd ./test/build

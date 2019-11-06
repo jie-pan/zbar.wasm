@@ -1,0 +1,7 @@
+wasm function #127 has simd
+wasm function #187 has simd
+wasm function #188 has simd //hotspot func, but loop doesn't contains simd
+wasm function #189 has simd
+wasm function #195 has simd
+wasm function #196 has simd
+wasm function #204 has simd
